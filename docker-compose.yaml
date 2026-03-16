@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: chatwoot_history_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-chatwoot_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-chatwoot_password}
+      POSTGRES_DB: ${POSTGRES_DB:-chatwoot_history}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/migrations/001_initial.sql:/docker-entrypoint-initdb.d/001_initial.sql
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chatwoot_history_backend
+    restart: always
+    depends_on:
+      - db
+    env_file:
+      - ./backend/.env
+    environment:
+      # Sobrescreve a URL do banco para apontar pro container 'db' dentro da rede do docker
+      DATABASE_URL: "postgresql+psycopg://chatwoot_user:chatwoot_password@db:5432/chatwoot_history"
+    ports:
+      - "8000:8000"
+
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: chatwoot_history_dashboard
+    restart: always
+    ports:
+      - "3000:80"
+    # Se precisar mapear env variables no build do Vite:
+    # args:
+    #   - VITE_API_BASE_URL=http://SEU_IP:8000/api/v1
+
+volumes:
+  postgres_data:
