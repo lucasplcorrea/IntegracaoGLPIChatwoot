@@ -65,8 +65,8 @@ Sempre que a integração for acessada via barra lateral, ela receberá e exibir
 
 As imagens oficiais estão disponíveis no DockerHub para facilitar o deploy sem necessidade de build local:
 
-- **Backend**: `lucaspedro/chatwoot-history-backend`
-- **Dashboard**: `lucaspedro/chatwoot-history-dashboard`
+- **Backend**: `lucasplcorrea/chatwoot-history-backend`
+- **Dashboard**: `lucasplcorrea/chatwoot-history-dashboard`
 
 ### Usando imagens prontas (Docker Compose)
 
@@ -75,10 +75,10 @@ Se não quiser clonar o código, você pode usar apenas o `docker-compose.yaml` 
 ```yaml
 services:
   backend:
-    image: lucaspedro/chatwoot-history-backend:latest
+    image: lucasplcorrea/chatwoot-history-backend:latest
     # ... resto das configurações
   dashboard:
-    image: lucaspedro/chatwoot-history-dashboard:latest
+    image: lucasplcorrea/chatwoot-history-dashboard:latest
     # ... resto das configurações
 ```
 
