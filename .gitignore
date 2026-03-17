@@ -47,3 +47,5 @@ workflows/*
 
 # Test / Dump files
 *.har
+.env-vps
+docker-compose-vps.yaml
