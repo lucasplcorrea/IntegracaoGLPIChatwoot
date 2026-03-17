@@ -16,6 +16,7 @@ services:
       - ./db/migrations/001_initial.sql:/docker-entrypoint-initdb.d/001_initial.sql
 
   backend:
+    image: lucasplcorrea/chatwoot-history-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -32,6 +33,7 @@ services:
       - "8000:8000"
 
   dashboard:
+    image: lucasplcorrea/chatwoot-history-dashboard:latest
     build:
       context: ./dashboard
       dockerfile: Dockerfile
