@@ -31,6 +31,7 @@ async def get_conversation_messages(conversation_id: int) -> ConversationDetail:
                 content=m.content,
                 sender_name=m.sender_name,
                 sent_at=m.sent_at,
+                attachments=m.attachments,
             )
             for m in messages
         ],

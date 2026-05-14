@@ -30,10 +30,14 @@ export function getContactHistory(contactId) {
 /**
  * Triggers an on-demand sync of all conversations for a contact.
  * @param {number} contactId
+ * @param {number|null} inboxId - Optional. If provided, syncs only conversations from this specific inbox.
  * @returns {Promise<null>}
  */
-export function syncContact(contactId) {
-  return request(`/contacts/${contactId}/sync`, { method: "POST" });
+export function syncContact(contactId, inboxId = null) {
+  const url = inboxId 
+    ? `/contacts/${contactId}/sync?inbox_id=${inboxId}`
+    : `/contacts/${contactId}/sync`;
+  return request(url, { method: "POST" });
 }
 
 /**

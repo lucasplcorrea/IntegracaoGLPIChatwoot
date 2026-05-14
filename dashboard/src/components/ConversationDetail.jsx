@@ -15,6 +15,27 @@ export function formatDateFull(isoString) {
   });
 }
 
+function isImageType(fileType) {
+  return /^image\//i.test(fileType) || ["jpg", "jpeg", "png", "gif", "webp", "bmp"].some(ext => fileType.toLowerCase().includes(ext));
+}
+
+function isVideoType(fileType) {
+  return /^video\//i.test(fileType) || ["mp4", "webm", "avi", "mov", "mkv"].some(ext => fileType.toLowerCase().includes(ext));
+}
+
+function isAudioType(fileType) {
+  return /^audio\//i.test(fileType) || ["mp3", "wav", "ogg", "aac", "m4a"].some(ext => fileType.toLowerCase().includes(ext));
+}
+
+function getFileIcon(fileType) {
+  if (isImageType(fileType)) return "🖼️";
+  if (isVideoType(fileType)) return "🎥";
+  if (isAudioType(fileType)) return "🎵";
+  if (fileType.includes("pdf")) return "📄";
+  if (fileType.includes("word") || fileType.includes("document")) return "📝";
+  return "📎";
+}
+
 export function MessageBubble({ message }) {
   const direction = message.message_type === "outgoing" ? "outgoing"
     : message.message_type === "activity" ? "activity"
@@ -26,6 +47,67 @@ export function MessageBubble({ message }) {
         {direction !== "activity" && message.sender_name && (
           <div className="msg-sender">{message.sender_name}</div>
         )}
+        
+        {/* Render attachments first (above text) */}
+        {message.attachments && message.attachments.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "8px" }}>
+            {message.attachments.map((att, i) => (
+              isImageType(att.file_type) ? (
+                <img
+                  key={i}
+                  src={att.url}
+                  alt={att.filename}
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "300px",
+                    borderRadius: "var(--radius)",
+                    cursor: "pointer"
+                  }}
+                  onClick={() => window.open(att.url, "_blank")}
+                  title={att.filename}
+                />
+              ) : isVideoType(att.file_type) ? (
+                <video
+                  key={i}
+                  src={att.url}
+                  controls
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "300px",
+                    borderRadius: "var(--radius)"
+                  }}
+                />
+              ) : isAudioType(att.file_type) ? (
+                <audio
+                  key={i}
+                  src={att.url}
+                  controls
+                  style={{ maxWidth: "100%", marginBottom: "4px" }}
+                />
+              ) : (
+                <a
+                  key={i}
+                  href={att.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-block",
+                    padding: "6px 10px",
+                    backgroundColor: "rgba(0,0,0,0.1)",
+                    borderRadius: "var(--radius)",
+                    fontSize: "12px",
+                    textDecoration: "none",
+                    color: "inherit"
+                  }}
+                  title={att.filename}
+                >
+                  {getFileIcon(att.file_type)} {att.filename}
+                </a>
+              )
+            ))}
+          </div>
+        )}
+
         <div className="msg-content">{message.content || <em style={{ opacity: 0.5 }}>[sem texto]</em>}</div>
         {message.sent_at && (
           <div className="msg-time">{formatDateFull(message.sent_at).slice(0, 5)} {formatTime(message.sent_at)}</div>

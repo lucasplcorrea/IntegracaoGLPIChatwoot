@@ -71,6 +71,7 @@ class ConversationMessage(Base):
     sender_name: Mapped[str | None] = mapped_column(Text, nullable=True)
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=_now)
+    attachments: Mapped[list[dict] | None] = mapped_column(JSONB, nullable=True)
 
     snapshot: Mapped["ConversationSnapshot"] = relationship("ConversationSnapshot", back_populates="messages")
 

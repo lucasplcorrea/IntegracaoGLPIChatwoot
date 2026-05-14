@@ -21,6 +21,7 @@ async def get_history(contact_id: int) -> list[ConversationItem]:
             first_message_at=s.first_message_at,
             last_message_at=s.last_message_at,
             resolved_at=s.resolved_at,
+            inbox_id=s.inbox_id,
         )
         for s in snapshots
     ]
@@ -36,6 +37,7 @@ async def get_contact_messages(contact_id: int) -> list[MessageItem]:
             content=m.content,
             sender_name=m.sender_name,
             sent_at=m.sent_at,
+            attachments=m.attachments,
         )
         for m in messages
     ]
@@ -45,3 +47,16 @@ async def sync_contact(contact_id: int, background_tasks: BackgroundTasks) -> di
     """Triggers an on-demand sync of all conversations for a contact from Chatwoot."""
     background_tasks.add_task(sync_contact_conversations, contact_id)
     return {"status": "sync_started", "contact_id": contact_id}
+
+
+@router.post("/contacts/{contact_id}/sync", status_code=status.HTTP_202_ACCEPTED)
+async def sync_contact(contact_id: int, background_tasks: BackgroundTasks, inbox_id: int | None = None) -> dict:
+    """Triggers an on-demand sync of all conversations for a contact from Chatwoot.
+    
+    Args:
+        contact_id: The Chatwoot contact ID
+        inbox_id: Optional. If provided, syncs only conversations from this specific inbox.
+                 If omitted, syncs conversations from all inboxes.
+    """
+    background_tasks.add_task(sync_contact_conversations, contact_id, inbox_id)
+    return {"status": "sync_started", "contact_id": contact_id, "inbox_id": inbox_id}

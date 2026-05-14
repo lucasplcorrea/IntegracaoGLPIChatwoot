@@ -99,20 +99,24 @@ class ChatwootService:
         
         content = raw.get("content") or ""
         
-        attachments = raw.get("attachments") or []
-        for att in attachments:
+        raw_attachments = raw.get("attachments") or []
+        parsed_attachments = []
+        for att in raw_attachments:
             url = att.get("data_url")
             if url:
-                file_type = att.get("file_type", "arquivo")
-                # Append basic attachment text
-                content += f"\n\n📎 Anexo ({file_type}): {url}"
-                
+                parsed_attachments.append({
+                    "filename": att.get("data_filename") or att.get("filename", "attachment"),
+                    "file_type": att.get("file_type", "file"),
+                    "url": url,
+                })
+
         return {
             "chatwoot_message_id": raw.get("id"),
             "message_type": msg_type,
             "content": content.strip() or None,
             "sender_name": sender.get("name"),
             "sent_at": _parse_ts(raw.get("created_at")),
+            "attachments": parsed_attachments if parsed_attachments else None,
         }
 
     def parse_conversation(self, raw: dict) -> dict:

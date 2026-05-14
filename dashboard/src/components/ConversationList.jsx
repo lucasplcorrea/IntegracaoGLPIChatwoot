@@ -44,6 +44,11 @@ export function ConversationList({ conversations, activeId, onSelect, currentCon
               <div className="conv-item-header">
                 <span className="conv-id">
                   #{conv.chatwoot_conversation_id}
+                  {conv.inbox_id && (
+                    <span style={{ marginLeft: 6, fontSize: 8, color: "var(--text-muted)", background: "rgba(92, 107, 192, 0.1)", padding: "2px 6px", borderRadius: 10 }}>
+                      inbox {conv.inbox_id}
+                    </span>
+                  )}
                   {isCurrent && (
                     <span style={{ marginLeft: 5, fontSize: 9, color: "var(--accent-light)", background: "var(--accent-dim)", padding: "1px 5px", borderRadius: 20 }}>
                       atual

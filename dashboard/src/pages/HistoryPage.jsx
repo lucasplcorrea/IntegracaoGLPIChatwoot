@@ -15,11 +15,23 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedInboxId, setSelectedInboxId] = useState(null);
   
   const [unifiedMessages, setUnifiedMessages] = useState(null);
   const [resolvedContactId, setResolvedContactId] = useState(null);
 
 
+
+  // Extract unique inbox IDs from conversation history
+  const availableInboxes = history
+    .map(conv => conv.inbox_id)
+    .filter((inbox, i, arr) => inbox && arr.indexOf(inbox) === i)
+    .sort((a, b) => a - b);
+
+  // Filter conversations by selected inbox
+  const filteredHistory = selectedInboxId
+    ? history.filter(conv => conv.inbox_id === selectedInboxId)
+    : history;
 
   // Resolve contact ID: if we only have conversationId, we fetch it from backend
   useEffect(() => {
@@ -58,7 +70,7 @@ export default function HistoryPage() {
     setSyncing(true);
     setError(null);
     try {
-      await syncContact(resolvedContactId);
+      await syncContact(resolvedContactId, selectedInboxId);
       // Wait a bit then reload history
       await new Promise((r) => setTimeout(r, 1500));
       
@@ -88,12 +100,34 @@ export default function HistoryPage() {
 
         {resolvedContactId ? (
           <>
-            <ContactHeader contactId={resolvedContactId} history={history} profile={contactProfile} />
+            <ContactHeader contactId={resolvedContactId} history={filteredHistory} profile={contactProfile} />
 
             <div className="section" style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
               <div className="section-header">
                 <span className="section-title">Feed Histórico Contínuo</span>
                 <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  {availableInboxes.length > 0 && (
+                    <select
+                      value={selectedInboxId || ""}
+                      onChange={(e) => setSelectedInboxId(e.target.value ? parseInt(e.target.value) : null)}
+                      style={{
+                        padding: "4px 8px",
+                        fontSize: "12px",
+                        borderRadius: "var(--radius)",
+                        border: "1px solid var(--border)",
+                        backgroundColor: "var(--bg-surface-2)",
+                        color: "var(--text)",
+                        cursor: "pointer"
+                      }}
+                    >
+                      <option value="">Todas as caixas</option>
+                      {availableInboxes.map(inboxId => (
+                        <option key={inboxId} value={inboxId}>
+                          Caixa {inboxId}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   <span className="section-count">{unifiedMessages?.length ?? 0}</span>
                   <button
                     className="btn btn-secondary btn-sm"
