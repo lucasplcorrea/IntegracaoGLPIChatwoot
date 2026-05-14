@@ -43,13 +43,6 @@ async def get_contact_messages(contact_id: int) -> list[MessageItem]:
     ]
 
 @router.post("/contacts/{contact_id}/sync", status_code=status.HTTP_202_ACCEPTED)
-async def sync_contact(contact_id: int, background_tasks: BackgroundTasks) -> dict:
-    """Triggers an on-demand sync of all conversations for a contact from Chatwoot."""
-    background_tasks.add_task(sync_contact_conversations, contact_id)
-    return {"status": "sync_started", "contact_id": contact_id}
-
-
-@router.post("/contacts/{contact_id}/sync", status_code=status.HTTP_202_ACCEPTED)
 async def sync_contact(contact_id: int, background_tasks: BackgroundTasks, inbox_id: int | None = None) -> dict:
     """Triggers an on-demand sync of all conversations for a contact from Chatwoot.
     

@@ -102,7 +102,6 @@ def upsert_messages(snapshot_id: str, messages: list[dict]) -> None:
                 )
                 if existing is None:
                     session.add(
-                    session.add(
                         ConversationMessage(
                             snapshot_id=snapshot_id,
                             chatwoot_message_id=msg["chatwoot_message_id"],
