@@ -50,58 +50,104 @@ export function MessageBubble({ message }) {
         
         {/* Render attachments first (above text) */}
         {message.attachments && message.attachments.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "8px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "10px" }}>
             {message.attachments.map((att, i) => (
               isImageType(att.file_type) ? (
-                <img
-                  key={i}
-                  src={att.url}
-                  alt={att.filename}
-                  style={{
-                    maxWidth: "100%",
-                    maxHeight: "300px",
-                    borderRadius: "var(--radius)",
-                    cursor: "pointer"
-                  }}
-                  onClick={() => window.open(att.url, "_blank")}
-                  title={att.filename}
-                />
+                <div key={i} style={{ maxWidth: "100%" }}>
+                  <img
+                    src={att.url}
+                    alt={att.filename}
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: "300px",
+                      borderRadius: "var(--radius)",
+                      cursor: "pointer",
+                      border: "1px solid rgba(0,0,0,0.1)",
+                      display: "block"
+                    }}
+                    onClick={() => window.open(att.url, "_blank")}
+                    title={`Clique para ampliar: ${att.filename}`}
+                  />
+                </div>
               ) : isVideoType(att.file_type) ? (
-                <video
-                  key={i}
-                  src={att.url}
-                  controls
+                <div 
+                  key={i} 
                   style={{
                     maxWidth: "100%",
-                    maxHeight: "300px",
-                    borderRadius: "var(--radius)"
+                    borderRadius: "var(--radius)",
+                    overflow: "hidden",
+                    backgroundColor: "#000",
+                    border: "1px solid rgba(0,0,0,0.2)"
                   }}
-                />
+                >
+                  <video
+                    src={att.url}
+                    controls
+                    controlsList="nodownload"
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: "400px",
+                      display: "block"
+                    }}
+                    title={att.filename}
+                  />
+                </div>
               ) : isAudioType(att.file_type) ? (
-                <audio
+                <div
                   key={i}
-                  src={att.url}
-                  controls
-                  style={{ maxWidth: "100%", marginBottom: "4px" }}
-                />
+                  style={{
+                    maxWidth: "100%",
+                    padding: "12px",
+                    backgroundColor: "rgba(100, 150, 255, 0.05)",
+                    borderRadius: "var(--radius)",
+                    border: "1px solid rgba(100, 150, 255, 0.2)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px"
+                  }}
+                >
+                  <div style={{ fontSize: "12px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span>🎵</span>
+                    <span style={{ fontWeight: 500 }}>{att.filename}</span>
+                  </div>
+                  <audio
+                    src={att.url}
+                    controls
+                    controlsList="nodownload"
+                    style={{
+                      maxWidth: "100%",
+                      height: "32px",
+                      borderRadius: "4px"
+                    }}
+                  />
+                </div>
               ) : (
                 <a
                   key={i}
                   href={att.url}
                   target="_blank"
                   rel="noopener noreferrer"
+                  download={att.filename}
                   style={{
-                    display: "inline-block",
-                    padding: "6px 10px",
-                    backgroundColor: "rgba(0,0,0,0.1)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "10px 12px",
+                    backgroundColor: "rgba(0,0,0,0.05)",
                     borderRadius: "var(--radius)",
-                    fontSize: "12px",
+                    fontSize: "13px",
                     textDecoration: "none",
-                    color: "inherit"
+                    color: "var(--text)",
+                    border: "1px solid rgba(0,0,0,0.1)",
+                    transition: "background-color 0.2s",
+                    cursor: "pointer"
                   }}
-                  title={att.filename}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = "rgba(0,0,0,0.1)"}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = "rgba(0,0,0,0.05)"}
+                  title={`Download: ${att.filename}`}
                 >
-                  {getFileIcon(att.file_type)} {att.filename}
+                  <span>{getFileIcon(att.file_type)}</span>
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{att.filename}</span>
                 </a>
               )
             ))}

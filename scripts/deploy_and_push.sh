@@ -1,48 +1,67 @@
-#!/usr/bin/env bash
-set -euo pipefail
+# Script PowerShell para build e push de imagens Docker no Windows
+# Uso: cd c:\...\IntegracaoGLPIChatwoot; .\scripts\deploy_and_push.ps1
+# Após executar, na VPS: git pull origin main && docker-compose pull && docker-compose restart
 
-# Script de deploy: constrói imagens backend/dashboard e publica no Docker Hub.
-# Uso: execute na raiz do repositório: ./scripts/deploy_and_push.sh
-# Opcional: definir DOCKER_USER e DOCKER_PASSWORD para login não interativo.
+param(
+    [switch]$SkipPull = $false
+)
 
-REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$REPO_DIR"
+$ErrorActionPreference = "Stop"
 
-echo "Atualizando código..."
-git pull origin main
+$REPO_DIR = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+Set-Location $REPO_DIR
 
-SHA=$(git rev-parse --short HEAD || echo "local")
+Write-Host "=== Build e Push de Imagens Docker ===" -ForegroundColor Green
+
+if (-not $SkipPull) {
+    Write-Host "Atualizando código do GitHub..." -ForegroundColor Yellow
+    git pull origin main
+}
+
+$SHA = (git rev-parse --short HEAD || "local").Trim()
+Write-Host "Commit SHA: $SHA" -ForegroundColor Cyan
 
 # Login Docker Hub
-if [ -n "${DOCKER_USER:-}" ] && [ -n "${DOCKER_PASSWORD:-}" ]; then
-  echo "Fazendo login no Docker Hub como $DOCKER_USER (não interativo)"
-  echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
-else
-  echo "Por favor faça login no Docker Hub (interativo). Se preferir, exporte DOCKER_USER/DOCKER_PASSWORD para login automático."
-  docker login
-fi
+Write-Host "Verificando login no Docker Hub..." -ForegroundColor Yellow
+docker login
 
-echo "Construindo backend..."
+# Build backend
+Write-Host "Construindo backend..." -ForegroundColor Yellow
 docker build -t lucasplcorrea/chatwoot-history-backend:latest ./backend
-docker tag lucasplcorrea/chatwoot-history-backend:latest lucasplcorrea/chatwoot-history-backend:$SHA
+if ($LASTEXITCODE -ne 0) { throw "Erro ao fazer build da imagem backend" }
 
-echo "Enviando backend para Docker Hub..."
+docker tag lucasplcorrea/chatwoot-history-backend:latest lucasplcorrea/chatwoot-history-backend:$SHA
+Write-Host "Backend construído com sucesso" -ForegroundColor Green
+
+# Push backend
+Write-Host "Enviando backend para Docker Hub..." -ForegroundColor Yellow
 docker push lucasplcorrea/chatwoot-history-backend:latest
 docker push lucasplcorrea/chatwoot-history-backend:$SHA
+Write-Host "Backend enviado com sucesso" -ForegroundColor Green
 
-echo "Construindo dashboard..."
+# Build dashboard
+Write-Host "Construindo dashboard..." -ForegroundColor Yellow
 docker build -t lucasplcorrea/chatwoot-history-dashboard:latest ./dashboard
-docker tag lucasplcorrea/chatwoot-history-dashboard:latest lucasplcorrea/chatwoot-history-dashboard:$SHA
+if ($LASTEXITCODE -ne 0) { throw "Erro ao fazer build da imagem dashboard" }
 
-echo "Enviando dashboard para Docker Hub..."
+docker tag lucasplcorrea/chatwoot-history-dashboard:latest lucasplcorrea/chatwoot-history-dashboard:$SHA
+Write-Host "Dashboard construído com sucesso" -ForegroundColor Green
+
+# Push dashboard
+Write-Host "Enviando dashboard para Docker Hub..." -ForegroundColor Yellow
 docker push lucasplcorrea/chatwoot-history-dashboard:latest
 docker push lucasplcorrea/chatwoot-history-dashboard:$SHA
+Write-Host "Dashboard enviado com sucesso" -ForegroundColor Green
 
-echo "Atualizando containers locais..."
-docker-compose pull || true
-docker-compose up -d --no-deps --build backend dashboard
-
-echo "Status dos containers:"
-docker-compose ps -a
-
-echo "Deploy concluído. Imagens publicadas com tag latest e $SHA."
+Write-Host ""
+Write-Host "=== Deploy Concluído ===" -ForegroundColor Green
+Write-Host "Imagens publicadas com tags:" -ForegroundColor Cyan
+Write-Host "  - lucasplcorrea/chatwoot-history-backend:latest"
+Write-Host "  - lucasplcorrea/chatwoot-history-backend:$SHA"
+Write-Host "  - lucasplcorrea/chatwoot-history-dashboard:latest"
+Write-Host "  - lucasplcorrea/chatwoot-history-dashboard:$SHA"
+Write-Host ""
+Write-Host "Na VPS (/app/docker/chatwoot-history), execute:" -ForegroundColor Cyan
+Write-Host "  git pull origin main" -ForegroundColor White
+Write-Host "  docker-compose pull" -ForegroundColor White
+Write-Host "  docker-compose restart" -ForegroundColor White
