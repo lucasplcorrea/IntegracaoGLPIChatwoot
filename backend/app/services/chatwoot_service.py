@@ -107,6 +107,12 @@ class ChatwootService:
             url = att.get("data_url") or att.get("url") or att.get("file_url")
             
             if url:
+                # Make URL absolute if it's relative
+                if url.startswith("/"):
+                    url = f"{settings.chatwoot_base_url.rstrip('/')}{url}"
+                elif not url.startswith("http"):
+                    url = f"{settings.chatwoot_base_url.rstrip('/')}/{url}"
+                
                 # Try multiple possible filename field names
                 filename = att.get("data_filename") or att.get("filename") or "attachment"
                 file_type = att.get("file_type") or att.get("content_type") or "file"
@@ -116,7 +122,7 @@ class ChatwootService:
                     "file_type": file_type,
                     "url": url,
                 })
-                logger.debug(f"Parsed attachment: {filename} ({file_type})")
+                logger.debug(f"Parsed attachment: {filename} ({file_type}) → {url}")
             else:
                 logger.debug(f"Skipping attachment with no URL: {att}")
 
