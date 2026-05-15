@@ -36,6 +36,15 @@ function getFileIcon(fileType) {
   return "📎";
 }
 
+// Get the API base URL from environment
+const envUrl = window.__env__?.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = envUrl || "http://localhost:8000/api/v1";
+
+// Convert attachment URL to use proxy endpoint for CORS handling
+function getProxyUrl(attachmentUrl) {
+  return `${API_BASE_URL}/attachments/proxy?url=${encodeURIComponent(attachmentUrl)}`;
+}
+
 export function MessageBubble({ message }) {
   const direction = message.message_type === "outgoing" ? "outgoing"
     : message.message_type === "activity" ? "activity"
@@ -51,11 +60,13 @@ export function MessageBubble({ message }) {
         {/* Render attachments first (above text) */}
         {message.attachments && message.attachments.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "10px" }}>
-            {message.attachments.map((att, i) => (
-              isImageType(att.file_type) ? (
+            {message.attachments.map((att, i) => {
+              const proxyUrl = getProxyUrl(att.url);
+              
+              return isImageType(att.file_type) ? (
                 <div key={i} style={{ maxWidth: "100%" }}>
                   <img
-                    src={att.url}
+                    src={proxyUrl}
                     alt={att.filename}
                     style={{
                       maxWidth: "100%",
@@ -81,7 +92,7 @@ export function MessageBubble({ message }) {
                   }}
                 >
                   <video
-                    src={att.url}
+                    src={proxyUrl}
                     controls
                     controlsList="nodownload"
                     style={{
@@ -111,7 +122,7 @@ export function MessageBubble({ message }) {
                     <span style={{ fontWeight: 500 }}>{att.filename}</span>
                   </div>
                   <audio
-                    src={att.url}
+                    src={proxyUrl}
                     controls
                     controlsList="nodownload"
                     style={{
@@ -124,7 +135,7 @@ export function MessageBubble({ message }) {
               ) : (
                 <a
                   key={i}
-                  href={att.url}
+                  href={proxyUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   download={att.filename}
