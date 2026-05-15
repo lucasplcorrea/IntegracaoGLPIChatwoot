@@ -101,14 +101,24 @@ class ChatwootService:
         
         raw_attachments = raw.get("attachments") or []
         parsed_attachments = []
+        
         for att in raw_attachments:
-            url = att.get("data_url")
+            # Try multiple possible URL field names
+            url = att.get("data_url") or att.get("url") or att.get("file_url")
+            
             if url:
+                # Try multiple possible filename field names
+                filename = att.get("data_filename") or att.get("filename") or "attachment"
+                file_type = att.get("file_type") or att.get("content_type") or "file"
+                
                 parsed_attachments.append({
-                    "filename": att.get("data_filename") or att.get("filename", "attachment"),
-                    "file_type": att.get("file_type", "file"),
+                    "filename": filename,
+                    "file_type": file_type,
                     "url": url,
                 })
+                logger.debug(f"Parsed attachment: {filename} ({file_type})")
+            else:
+                logger.debug(f"Skipping attachment with no URL: {att}")
 
         return {
             "chatwoot_message_id": raw.get("id"),
