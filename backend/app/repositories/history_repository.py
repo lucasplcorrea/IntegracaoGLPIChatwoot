@@ -119,15 +119,17 @@ def upsert_messages(snapshot_id: str, messages: list[dict]) -> None:
         session.close()
 
 
-def get_contact_history(chatwoot_contact_id: int) -> list[ConversationSnapshot]:
+def get_contact_history(chatwoot_contact_id: int, inbox_id: int | None = None) -> list[ConversationSnapshot]:
     session = SessionLocal()
     try:
         contact = session.query(Contact).filter_by(chatwoot_contact_id=chatwoot_contact_id).one_or_none()
         if not contact:
             return []
+        query = session.query(ConversationSnapshot).filter_by(contact_id=contact.id)
+        if inbox_id is not None:
+            query = query.filter_by(inbox_id=inbox_id)
         return (
-            session.query(ConversationSnapshot)
-            .filter_by(contact_id=contact.id)
+            query
             .order_by(ConversationSnapshot.last_message_at.desc().nulls_last())
             .all()
         )
@@ -156,15 +158,22 @@ def get_snapshot_messages(snapshot_id: str) -> list[ConversationMessage]:
         session.close()
 
 
-def get_all_messages_for_contact(chatwoot_contact_id: int) -> list[ConversationMessage]:
-    """Retrieves all messages across all snapshots for a given contact, ordered chronologically."""
+def get_all_messages_for_contact(chatwoot_contact_id: int, inbox_id: int | None = None) -> list[ConversationMessage]:
+    """Retrieves all messages across all snapshots for a given contact, ordered chronologically.
+    
+    If inbox_id is provided, only returns messages from conversations in that inbox.
+    """
     session = SessionLocal()
     try:
         contact = session.query(Contact).filter_by(chatwoot_contact_id=chatwoot_contact_id).one_or_none()
         if not contact:
             return []
-            
-        snapshot_ids = [s.id for s in session.query(ConversationSnapshot.id).filter_by(contact_id=contact.id).all()]
+        
+        # Build query for snapshots
+        snapshot_query = session.query(ConversationSnapshot.id).filter_by(contact_id=contact.id)
+        if inbox_id is not None:
+            snapshot_query = snapshot_query.filter_by(inbox_id=inbox_id)
+        snapshot_ids = [s[0] for s in snapshot_query.all()]
         if not snapshot_ids:
             return []
             

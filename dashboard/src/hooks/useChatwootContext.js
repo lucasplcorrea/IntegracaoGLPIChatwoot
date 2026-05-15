@@ -106,11 +106,14 @@ export function useChatwootContext() {
 
   const contactId = appContextContact?.id || detected.contactId;
   const conversationId = appContextConversation?.id || detected.conversationId;
+  const inboxId = appContextConversation?.inbox_id || appContextConversation?.inboxId || null;
 
   return {
     contactId,
     conversationId,
+    inboxId,
     contactProfile: appContextContact,
+    conversationData: appContextConversation,
     detected,
   };
 }

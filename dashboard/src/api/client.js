@@ -21,10 +21,14 @@ async function request(path, options = {}) {
 /**
  * Returns the conversation history for a contact from the local index.
  * @param {number} contactId
+ * @param {number|null} inboxId - Optional. If provided, returns only conversations from this specific inbox.
  * @returns {Promise<Array>}
  */
-export function getContactHistory(contactId) {
-  return request(`/contacts/${contactId}/history`);
+export function getContactHistory(contactId, inboxId = null) {
+  const url = inboxId 
+    ? `/contacts/${contactId}/history?inbox_id=${inboxId}`
+    : `/contacts/${contactId}/history`;
+  return request(url);
 }
 
 /**
@@ -52,10 +56,14 @@ export function getConversationMessages(conversationId) {
 /**
  * Returns all messages from all indexed conversations for a contact, chronologically.
  * @param {number} contactId
+ * @param {number|null} inboxId - Optional. If provided, returns only messages from conversations in this specific inbox.
  * @returns {Promise<Array>} Array of MessageItem
  */
-export function getContactMessages(contactId) {
-  return request(`/contacts/${contactId}/messages`);
+export function getContactMessages(contactId, inboxId = null) {
+  const url = inboxId 
+    ? `/contacts/${contactId}/messages?inbox_id=${inboxId}`
+    : `/contacts/${contactId}/messages`;
+  return request(url);
 }
 /**
  * Returns the contact ID and info for a conversation (fetches from Chatwoot API via backend).

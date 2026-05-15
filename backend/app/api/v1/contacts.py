@@ -9,9 +9,14 @@ router = APIRouter(tags=["contacts"])
 
 
 @router.get("/contacts/{contact_id}/history", response_model=list[ConversationItem])
-async def get_history(contact_id: int) -> list[ConversationItem]:
-    """Returns locally-indexed conversations for a contact, ordered by most recent first."""
-    snapshots = get_contact_history(contact_id)
+async def get_history(contact_id: int, inbox_id: int | None = None) -> list[ConversationItem]:
+    """Returns locally-indexed conversations for a contact, ordered by most recent first.
+    
+    Args:
+        contact_id: The Chatwoot contact ID
+        inbox_id: Optional. If provided, returns only conversations from this specific inbox.
+    """
+    snapshots = get_contact_history(contact_id, inbox_id)
     return [
         ConversationItem(
             chatwoot_conversation_id=s.chatwoot_conversation_id,
@@ -27,9 +32,14 @@ async def get_history(contact_id: int) -> list[ConversationItem]:
     ]
 
 @router.get("/contacts/{contact_id}/messages", response_model=list[MessageItem])
-async def get_contact_messages(contact_id: int) -> list[MessageItem]:
-    """Returns all locally-indexed messages for a contact, ordered chronologically."""
-    messages = get_all_messages_for_contact(contact_id)
+async def get_contact_messages(contact_id: int, inbox_id: int | None = None) -> list[MessageItem]:
+    """Returns all locally-indexed messages for a contact, ordered chronologically.
+    
+    Args:
+        contact_id: The Chatwoot contact ID
+        inbox_id: Optional. If provided, returns only messages from conversations in this specific inbox.
+    """
+    messages = get_all_messages_for_contact(contact_id, inbox_id)
     return [
         MessageItem(
             chatwoot_message_id=m.chatwoot_message_id,

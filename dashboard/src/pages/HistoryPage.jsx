@@ -8,6 +8,7 @@ export default function HistoryPage() {
   const {
     contactId,
     conversationId,
+    inboxId: contextInboxId,
     contactProfile,
   } = useChatwootContext();
 
@@ -20,7 +21,12 @@ export default function HistoryPage() {
   const [unifiedMessages, setUnifiedMessages] = useState(null);
   const [resolvedContactId, setResolvedContactId] = useState(null);
 
-
+  // When accessed via iframe with a specific conversation, auto-select that inbox
+  useEffect(() => {
+    if (contextInboxId) {
+      setSelectedInboxId(contextInboxId);
+    }
+  }, [contextInboxId]);
 
   // Extract unique inbox IDs from conversation history
   const availableInboxes = history
@@ -55,15 +61,15 @@ export default function HistoryPage() {
     setLoading(true);
     setUnifiedMessages(null);
 
-    getContactHistory(resolvedContactId)
+    getContactHistory(resolvedContactId, selectedInboxId)
       .then(setHistory)
       .catch(console.error);
 
-    getContactMessages(resolvedContactId)
+    getContactMessages(resolvedContactId, selectedInboxId)
       .then(setUnifiedMessages)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [resolvedContactId]);
+  }, [resolvedContactId, selectedInboxId]);
 
   async function handleSync() {
     if (!resolvedContactId || syncing) return;
@@ -74,10 +80,10 @@ export default function HistoryPage() {
       // Wait a bit then reload history
       await new Promise((r) => setTimeout(r, 1500));
       
-      const newHistory = await getContactHistory(resolvedContactId);
+      const newHistory = await getContactHistory(resolvedContactId, selectedInboxId);
       setHistory(newHistory);
       
-      const updatedMessages = await getContactMessages(resolvedContactId);
+      const updatedMessages = await getContactMessages(resolvedContactId, selectedInboxId);
       setUnifiedMessages(updatedMessages);
     } catch (err) {
       setError(err.message);
