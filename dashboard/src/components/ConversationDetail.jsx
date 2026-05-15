@@ -160,8 +160,8 @@ export function MessageBubble({ message }) {
                   <span>{getFileIcon(att.file_type)}</span>
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{att.filename}</span>
                 </a>
-              )
-            ))}
+              );
+            })}
           </div>
         )}
 
