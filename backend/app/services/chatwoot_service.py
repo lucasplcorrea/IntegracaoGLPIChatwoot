@@ -107,22 +107,46 @@ class ChatwootService:
             url = att.get("data_url") or att.get("url") or att.get("file_url")
             
             if url:
-                # Make URL absolute if it's relative
-                if url.startswith("/"):
-                    url = f"{settings.chatwoot_base_url.rstrip('/')}{url}"
-                elif not url.startswith("http"):
-                    url = f"{settings.chatwoot_base_url.rstrip('/')}/{url}"
-                
-                # Try multiple possible filename field names
-                filename = att.get("data_filename") or att.get("filename") or "attachment"
-                file_type = att.get("file_type") or att.get("content_type") or "file"
+                   # Try multiple possible filename field names
+                   filename = att.get("data_filename") or att.get("filename") or "attachment"
+                   file_type = att.get("file_type") or att.get("content_type") or ""
+               
+                   # If file_type is missing or generic, try to infer from filename or URL
+                   if not file_type or file_type == "attachment":
+                       # Extract extension from filename
+                       if filename and "." in filename:
+                           ext = filename.split(".")[-1].lower()
+                           # Map extensions to MIME-like types
+                           ext_map = {
+                               "jpg": "image", "jpeg": "image", "png": "image", "gif": "image", "webp": "image", "bmp": "image",
+                               "mp4": "video", "webm": "video", "avi": "video", "mov": "video", "mkv": "video",
+                               "mp3": "audio", "wav": "audio", "ogg": "audio", "aac": "audio", "m4a": "audio", "oga": "audio",
+                               "pdf": "application/pdf", "doc": "application/word", "docx": "application/word"
+                           }
+                           file_type = ext_map.get(ext, file_type)
+                   
+                       # If still empty, try to infer from URL
+                       if not file_type:
+                           url_lower = url.lower()
+                           if any(ext in url_lower for ext in [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"]):
+                               file_type = "image"
+                           elif any(ext in url_lower for ext in [".mp4", ".webm", ".avi", ".mov", ".mkv"]):
+                               file_type = "video"
+                           elif any(ext in url_lower for ext in [".mp3", ".wav", ".ogg", ".aac", ".m4a", ".oga"]):
+                               file_type = "audio"
+               
+                   # Make URL absolute if it's relative
+                   if url.startswith("/"):
+                       url = f"{settings.chatwoot_base_url.rstrip('/')}{url}"
+                   elif not url.startswith("http"):
+                       url = f"{settings.chatwoot_base_url.rstrip('/')}/{url}"
                 
                 parsed_attachments.append({
                     "filename": filename,
                     "file_type": file_type,
                     "url": url,
                 })
-                logger.debug(f"Parsed attachment: {filename} ({file_type}) → {url}")
+                   logger.info(f"Parsed attachment: {filename} ({file_type}) → {url}")
             else:
                 logger.debug(f"Skipping attachment with no URL: {att}")
 
